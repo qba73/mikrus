@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Clients represents Mikrus client.
+// Client represents Mikrus client.
 type Client struct {
 	apiKey     string
 	serverID   string
