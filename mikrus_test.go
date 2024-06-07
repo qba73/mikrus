@@ -2,7 +2,6 @@ package mikrus_test
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -19,10 +18,10 @@ func TestMikrusReturnsInformationAboutServer(t *testing.T) {
 	ts := newTestServer("/info", info, t)
 	defer ts.Close()
 
-	c := mikrus.New("dummyAPIKey", "dummyServerID")
+	c := mikrus.New("dummyKey", "dummySrv")
 	c.HTTPClient = ts.Client()
 	c.URL = ts.URL
-	got, err := c.Info(context.Background())
+	got, err := c.Info()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +48,7 @@ func TestMikrusReturnsListOfServers(t *testing.T) {
 	c.HTTPClient = ts.Client()
 	c.URL = ts.URL
 
-	got, err := c.Servers(context.Background())
+	got, err := c.Servers()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +81,7 @@ func TestMikrusReturnsServerLogs(t *testing.T) {
 	c.HTTPClient = ts.Client()
 	c.URL = ts.URL
 
-	got, err := c.Logs(context.Background())
+	got, err := c.Logs()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,9 +122,8 @@ func newTestServer(path string, data []byte, t *testing.T) *httptest.Server {
 		if r.Method != http.MethodPost {
 			t.Fatalf("want POST request, got %q", r.Method)
 		}
-		verifyURL(path, r.RequestURI, t)
-		_, err := io.Copy(w, bytes.NewReader(data))
-		if err != nil {
+		verifyURL(path, r.URL.EscapedPath(), t)
+		if _, err := io.Copy(w, bytes.NewReader(data)); err != nil {
 			t.Fatal(err)
 		}
 	}))

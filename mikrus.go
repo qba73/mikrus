@@ -2,8 +2,6 @@
 package mikrus
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -47,13 +45,9 @@ type Server struct {
 }
 
 // Info returns information about server associated with the API Key and ServerID.
-func (c *Client) Info(ctx context.Context) (Server, error) {
+func (c *Client) Info() (Server, error) {
 	res := Server{}
-	val := url.Values{
-		"key": []string{c.apiKey},
-		"srv": []string{c.serverID},
-	}
-	if err := c.callAPI(ctx, "info", &res, []byte(val.Encode())); err != nil {
+	if err := c.callAPI("info", &res); err != nil {
 		return Server{}, err
 	}
 	return res, nil
@@ -61,13 +55,9 @@ func (c *Client) Info(ctx context.Context) (Server, error) {
 
 // Servers returns short information about all servers associated
 // with the API Key and ServerID.
-func (c *Client) Servers(ctx context.Context) ([]Server, error) {
+func (c *Client) Servers() ([]Server, error) {
 	servers := []Server{}
-	val := url.Values{
-		"key": []string{c.apiKey},
-		"srv": []string{c.serverID},
-	}
-	if err := c.callAPI(ctx, "serwery", &servers, []byte(val.Encode())); err != nil {
+	if err := c.callAPI("serwery", &servers); err != nil {
 		return []Server{}, err
 	}
 	return servers, nil
@@ -85,27 +75,23 @@ type Log struct {
 
 // Logs returns lats 10 log entries from the server associated
 // with the API Key and ServerID.
-func (c *Client) Logs(ctx context.Context) ([]Log, error) {
+func (c *Client) Logs() ([]Log, error) {
 	logs := []Log{}
-	val := url.Values{
-		"key": []string{c.apiKey},
-		"srv": []string{c.serverID},
-	}
-	if err := c.callAPI(ctx, "logs", &logs, []byte(val.Encode())); err != nil {
+	if err := c.callAPI("logs", &logs); err != nil {
 		return []Log{}, err
 	}
 	return logs, nil
 }
 
-func (c *Client) callAPI(ctx context.Context, verb string, res any, data []byte) error {
+func (c *Client) callAPI(verb string, res any) error {
 	requestURL := c.URL + "/" + verb
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, requestURL, bytes.NewBuffer(data))
-	if err != nil {
-		return fmt.Errorf("failed to create HTTP request: %w", err)
+	val := url.Values{
+		"key": []string{c.apiKey},
+		"srv": []string{c.serverID},
 	}
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.HTTPClient.PostForm(requestURL, val)
 	if err != nil {
-		return fmt.Errorf("HTTP request failed: %w", err)
+		return err
 	}
 	defer resp.Body.Close()
 	respBytes, err := io.ReadAll(resp.Body)
