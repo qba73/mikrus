@@ -24,3 +24,6 @@ go.work.sum
 # Mikrus config file
 .mikrus
 
+nodes.md
+
+
