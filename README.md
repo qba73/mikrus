@@ -1,6 +1,6 @@
 # mikrus
 
-`mikrus` is a Go library and command-line client for the the [MIKRUS VPS](https://mikr.us) provider. It allows you to interact with provisioned servers and perform various tasks, for example:
+`mikrus` is a Go library and command-line client for [MIKRUS VPS](https://mikr.us) provider. It allows you to interact with provisioned servers and perform various tasks, for example:
 
 - show information about your server
 - list provisioned servers
