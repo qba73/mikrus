@@ -1,5 +1,6 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/qba73/mikrus.svg)](https://pkg.go.dev/github.com/qba73/mikrus)
 [![Go Report Card](https://goreportcard.com/badge/github.com/qba73/mikrus)](https://goreportcard.com/report/github.com/qba73/mikrus)
+[![Tests](https://github.com/qba73/mikrus/actions/workflows/go.yml/badge.svg)](https://github.com/qba73/mikrus/actions/workflows/go.yml)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/qba73/mikrus)
 ![GitHub](https://img.shields.io/github/license/qba73/mikrus)
 
