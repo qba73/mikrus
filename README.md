@@ -107,7 +107,7 @@ Is Pro service: nie
 The `mikctl servers` command will list basic information about your provisioned servers:
 
 ```shell
-mikctl --srvID XXX --apiKey  servers
+mikctl --srvID XXX --apiKey YYY  servers
 
 Server ID: a135
 Server name:
