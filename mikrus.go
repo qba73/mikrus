@@ -2,8 +2,10 @@
 package mikrus
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"net/url"
@@ -31,19 +33,6 @@ func New(apiKey, srvID string) Client {
 	}
 }
 
-// Server represents information about Mirkus server.
-type Server struct {
-	ServerID       string `json:"server_id"`
-	ServerName     string `json:"server_name,omitempty"`
-	Expires        string `json:"expires"`
-	ExpiresCytrus  string `json:"expires_cytrus,omitempty"`
-	ExpiresStorage string `json:"expires_storage,omitempty"`
-	ParamRam       string `json:"param_ram"`
-	ParamDisk      string `json:"param_disk"`
-	LastLogPanel   string `json:"lastlog_panel"`
-	MikrusPro      string `json:"mikrus_pro"`
-}
-
 // Info returns information about server associated with the API Key and ServerID.
 func (c *Client) Info() (Server, error) {
 	res := Server{}
@@ -55,10 +44,10 @@ func (c *Client) Info() (Server, error) {
 
 // Servers returns short information about all servers associated
 // with the API Key and ServerID.
-func (c *Client) Servers() ([]Server, error) {
-	servers := []Server{}
+func (c *Client) Servers() (Servers, error) {
+	servers := Servers{}
 	if err := c.callAPI("serwery", &servers); err != nil {
-		return []Server{}, err
+		return Servers{}, err
 	}
 	return servers, nil
 }
@@ -108,4 +97,80 @@ func (c *Client) callAPI(verb string, res any) error {
 		return fmt.Errorf("decoding error for %q: %w", respString, err)
 	}
 	return nil
+}
+
+// ServerShort represents short server description.
+type ServerShort struct {
+	ServerID   string `json:"server_id"`
+	ServerName string `json:"server_name"`
+	Expires    string `json:"expires"`
+	ParamRam   string `json:"param_ram"`
+	ParamDisk  string `json:"param_disk"`
+}
+
+const serversTemplate = `{{ range . }}
+Server ID: {{ .ServerID }}
+Server name: {{ .ServerName }}
+Expiration date: {{ .Expires }}
+RAM size: {{ .ParamRam }}
+ParamDisk: {{ .ParamDisk }}
+{{ end }}`
+
+// Servers is a list of servers in a short form.
+type Servers []ServerShort
+
+// String implements stringer interface.
+func (s Servers) String() string {
+	out, err := render(serversTemplate, s)
+	if err != nil {
+		return fmt.Sprintln(err.Error())
+	}
+	return out
+}
+
+// Server represents information about Mirkus server.
+type Server struct {
+	ServerID       string `json:"server_id"`
+	ServerName     string `json:"server_name,omitempty"`
+	Expires        string `json:"expires"`
+	ExpiresCytrus  string `json:"expires_cytrus,omitempty"`
+	ExpiresStorage string `json:"expires_storage,omitempty"`
+	ParamRam       string `json:"param_ram"`
+	ParamDisk      string `json:"param_disk"`
+	LastLogPanel   string `json:"lastlog_panel"`
+	MikrusPro      string `json:"mikrus_pro"`
+}
+
+const serverTemplate = `ServerID: {{ .ServerID }}
+Server name: {{ .ServerName }}
+Expiration date: {{ .Expires }}
+Cytrus expiration date: {{ .ExpiresCytrus }}
+Storage expiration date: {{ .ExpiresStorage }}
+RAM size: {{ .ParamRam }}
+Disk size: {{ .ParamDisk }}
+Last log time: {{ .LastLogPanel }}
+Is Pro service: {{ .MikrusPro }}`
+
+// String implements stringer interface.
+func (s Server) String() string {
+	out, err := render(serverTemplate, s)
+	if err != nil {
+		return fmt.Sprintln(err.Error())
+	}
+	return out
+}
+
+// render takes a template and a data value, and returns
+// the string result of executing the template.
+func render(templateName string, value any) (string, error) {
+	tmpl, err := template.New("").Parse(templateName)
+	if err != nil {
+		return "", err
+	}
+	var output bytes.Buffer
+	err = tmpl.Execute(&output, value)
+	if err != nil {
+		return "", err
+	}
+	return output.String(), nil
 }

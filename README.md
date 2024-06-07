@@ -85,6 +85,45 @@ or
  mikctl --srvID YYY --apiKey XXX server
 ```
 
+## Getting server info
+
+The `mikctl server` command will list information about your server:
+
+```shell
+mikctl --srvID XXX --apiKey YYY server
+ServerID: j230
+Server name:
+Expiration date: 2026-06-08 00:00:00
+Cytrus expiration date:
+Storage expiration date:
+RAM size: 1024
+Disk size: 10
+Last log time: 2024-06-07 09:06:35
+Is Pro service: nie
+```
+
+## Listing servers
+
+The `mikctl servers` command will list basic information about your provisioned servers:
+
+```shell
+mikctl --srvID XXX --apiKey  servers
+
+Server ID: a135
+Server name:
+Expiration date: 2025-06-05 00:00:00
+RAM size: 1024
+ParamDisk: 10
+
+Server ID: j330
+Server name:
+Expiration date: 2026-06-08 00:00:00
+RAM size: 1024
+ParamDisk: 10
+```
+
+## Listing logs
+
 ## Bugs and feature requests
 
 If you find a bug in the `mikrus` client or library, please [open an issue](https://github.com/qba73/mikrus/issues). Similarly, if you'd like a feature added or improved, let me know via an issue.

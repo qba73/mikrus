@@ -52,7 +52,7 @@ func TestMikrusReturnsListOfServers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []mikrus.Server{
+	want := mikrus.Servers{
 		{
 			ServerID:  "a133",
 			Expires:   "2025-06-05 00:00:00",
