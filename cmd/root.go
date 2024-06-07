@@ -32,15 +32,13 @@ func Execute() {
 }
 
 var (
-	apiKey  string
-	srvID   string
-	cfgFile string
-	client  mikrus.Client
+	apiKey string
+	srvID  string
+	client mikrus.Client
 )
 
 func init() {
 	viper.SetConfigName(".mikrus")
-	viper.SetConfigType("yaml")
 	viper.AddConfigPath("$HOME")
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
@@ -52,13 +50,12 @@ func init() {
 	cobra.OnInitialize(func() {
 		client = mikrus.New(viper.GetString("apiKey"), viper.GetString("srvID"))
 	})
-	rootCmd.PersistentFlags().StringVar(&apiKey, "apiKey", "", "Mikrus server API key")
-	rootCmd.PersistentFlags().StringVar(&srvID, "srvID", "", "Mikrus server ID")
-	viper.BindPFlag("apiKey", rootCmd.PersistentFlags().Lookup("apiKey"))
-	viper.BindEnv("apiKey", "API_KEY")
-	viper.BindPFlag("srvID", rootCmd.PersistentFlags().Lookup("srvID"))
-	viper.BindEnv("apiKey", "SRV_ID")
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mikrus.yaml)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&apiKey, "apiKey", "", "Mikrus server API key")
+	viper.BindPFlag("apiKey", rootCmd.PersistentFlags().Lookup("apiKey"))
+	viper.BindEnv("apiKey", "MIKRUS_API_KEY")
+
+	rootCmd.PersistentFlags().StringVar(&srvID, "srvID", "", "Mikrus server ID")
+	viper.BindPFlag("srvID", rootCmd.PersistentFlags().Lookup("srvID"))
+	viper.BindEnv("apiKey", "MIKRUS_SRV_ID")
 }
