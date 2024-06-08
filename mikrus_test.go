@@ -85,7 +85,7 @@ func TestMikrusReturnsServerLogs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []mikrus.Log{
+	want := mikrus.Logs{
 		{
 			ID:          "3752",
 			ServerID:    "j230",

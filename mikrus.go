@@ -52,22 +52,12 @@ func (c *Client) Servers() (Servers, error) {
 	return servers, nil
 }
 
-// Log represents a server log information.
-type Log struct {
-	ID          string `json:"id"`
-	ServerID    string `json:"server_id"`
-	Task        string `json:"task"`
-	WhenCreated string `json:"when_created"`
-	WhenDone    string `json:"when_done"`
-	Output      string `json:"output"`
-}
-
 // Logs returns lats 10 log entries from the server associated
 // with the API Key and ServerID.
-func (c *Client) Logs() ([]Log, error) {
-	logs := []Log{}
+func (c *Client) Logs() (Logs, error) {
+	logs := Logs{}
 	if err := c.callAPI("logs", &logs); err != nil {
-		return []Log{}, err
+		return Logs{}, err
 	}
 	return logs, nil
 }
@@ -149,7 +139,7 @@ Storage expiration date: {{ .ExpiresStorage }}
 RAM size: {{ .ParamRam }}
 Disk size: {{ .ParamDisk }}
 Last log time: {{ .LastLogPanel }}
-Is Pro service: {{ .MikrusPro }}`
+Is Pro service: {{ .MikrusPro | toEng }}`
 
 // String implements stringer interface.
 func (s Server) String() string {
@@ -160,10 +150,41 @@ func (s Server) String() string {
 	return out
 }
 
+// Log represents a server log information.
+type Log struct {
+	ID          string `json:"id"`
+	ServerID    string `json:"server_id"`
+	Task        string `json:"task"`
+	WhenCreated string `json:"when_created"`
+	WhenDone    string `json:"when_done"`
+	Output      string `json:"output"`
+}
+
+const logsTemplate = `{{ range .}}
+ID: {{ .ID }}
+Server ID: {{ .ServerID }}
+Task: {{ .Task }}
+Created: {{ .WhenCreated }}
+Done: {{ .WhenDone }}
+Output: {{ .Output | cleanup }}
+{{ end }}`
+
+// Logs represents a list of server logs.
+type Logs []Log
+
+// String implements stringer interface.
+func (l Logs) String() string {
+	out, err := render(logsTemplate, l)
+	if err != nil {
+		return fmt.Sprintln(err.Error())
+	}
+	return out
+}
+
 // render takes a template and a data value, and returns
 // the string result of executing the template.
 func render(templateName string, value any) (string, error) {
-	tmpl, err := template.New("").Parse(templateName)
+	tmpl, err := template.New("").Funcs(template.FuncMap{"cleanup": cleanup, "toEng": toEng}).Parse(templateName)
 	if err != nil {
 		return "", err
 	}
@@ -173,4 +194,18 @@ func render(templateName string, value any) (string, error) {
 		return "", err
 	}
 	return output.String(), nil
+}
+
+// cleanup makes a log line a one-liner.
+func cleanup(logLine string) string {
+	r := strings.NewReplacer("\n", " ", "+", "")
+	return r.Replace(logLine)
+}
+
+// toEng translates input string from Polish to English.
+//
+// This is a temp solution before applying a proper
+// localisation to the entire program.
+func toEng(s string) string {
+	return strings.ReplaceAll(s, "nie", "no")
 }
