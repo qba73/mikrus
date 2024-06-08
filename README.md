@@ -131,10 +131,10 @@ mikctl --srvID j230 --apiKey XXX logs
 
 ID: 3756
 Server ID: j230
-Task: kluczssh
+Task: sshkey
 Created: 2024-06-07 09:06:58
 Done: 2024-06-07 09:07:01
-Output: Wrzuciłem klucz SSH
+Output: Uploaded SSH key
 
 ID: 3751
 Server ID: j230

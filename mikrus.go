@@ -163,10 +163,10 @@ type Log struct {
 const logsTemplate = `{{ range .}}
 ID: {{ .ID }}
 Server ID: {{ .ServerID }}
-Task: {{ .Task }}
+Task: {{ .Task | toEng }}
 Created: {{ .WhenCreated }}
 Done: {{ .WhenDone }}
-Output: {{ .Output | cleanup }}
+Output: {{ .Output | cleanup | toEng }}
 {{ end }}`
 
 // Logs represents a list of server logs.
@@ -202,10 +202,15 @@ func cleanup(logLine string) string {
 	return r.Replace(logLine)
 }
 
-// toEng translates input string from Polish to English.
+// toEng translates from Polish to English.
 //
 // This is a temp solution before applying a proper
 // localisation to the entire program.
 func toEng(s string) string {
-	return strings.ReplaceAll(s, "nie", "no")
+	r := strings.NewReplacer(
+		"nie", "no",
+		"Wrzuciłem klucz SSH", "Uploaded SSH key",
+		"kluczssh", "sshkey",
+	)
+	return r.Replace(s)
 }
