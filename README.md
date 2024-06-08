@@ -124,6 +124,40 @@ ParamDisk: 10
 
 ## Listing logs
 
+The `mikctl logs` command will list last ten (max) log messages:
+
+```shell
+mikctl --srvID j230 --apiKey XXX logs
+
+ID: 3756
+Server ID: j230
+Task: kluczssh
+Created: 2024-06-07 09:06:58
+Done: 2024-06-07 09:07:01
+Output: Wrzuciłem klucz SSH
+
+ID: 3751
+Server ID: j230
+Task: restart
+Created: 2024-06-05 09:57:54
+Done: 2024-06-05 09:58:07
+Output: OK
+
+ID: 3749
+Server ID: j230
+Task: password
+Created: 2024-06-05 09:16:50
+Done: 2024-06-05 09:17:02
+Output: OK
+
+ID: 3748
+Server ID: j230
+Task: upgrade
+Created: 2024-06-05 08:59:28
+Done: 2024-06-05 09:00:04
+Output: === Aktualne parametry: 768 RAM / 10 DYSK 2 / 20 Dodaje: 256MB RAM oraz 0GB dysku Po zmianie: 1024 MB / 10 GB [succes] GOTOWE!
+```
+
 ## Bugs and feature requests
 
 If you find a bug in the `mikrus` client or library, please [open an issue](https://github.com/qba73/mikrus/issues). Similarly, if you'd like a feature added or improved, let me know via an issue.
