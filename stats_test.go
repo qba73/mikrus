@@ -1,7 +1,9 @@
 package mikrus_test
 
 import (
+	"slices"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/qba73/mikrus"
@@ -65,21 +67,71 @@ func TestParseDiskSpace_ParsesCommandOutputOnValidInput(t *testing.T) {
 
 func TestParseUptime_ParsesUtimeCommandOutputOnValidInput(t *testing.T) {
 	t.Parallel()
-
-	got, err := mikrus.ParseUptime(uptimeCmdOutput)
+	uptimeCmdOutput := "16:32:02 up 6 days,  8:33,  0 users,  load average: 0.10, 1.00, 0.50"
+	wantUptime, err := time.ParseDuration("152h33m0s")
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := mikrus.Uptime{
-		Time:          "16:32:02",
-		DaysUp:        6,
-		UsersLoggedIn: 0,
-		CPUload1min:   "0.00",
-		CPUload5min:   "0.00",
-		CPUload15min:  "0.00",
+		Uptime:       wantUptime,
+		Users:        0,
+		CPUload1min:  0.1,
+		CPUload5min:  1.0,
+		CPUload15min: 0.5,
 	}
+	got, err := mikrus.ParseUptime(uptimeCmdOutput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want != got {
+		t.Error(cmp.Diff(want, got))
+	}
+}
 
-	if !cmp.Equal(want, got) {
+func TestParseUptime_ErrorsForInvalidInput(t *testing.T) {
+	t.Parallel()
+	_, err := mikrus.ParseUptime("bogus")
+	if err == nil {
+		t.Fatal("want error for invalid input, got nil")
+	}
+}
+
+func TestParsePS_ReturnsCorrectResult(t *testing.T) {
+	t.Parallel()
+	psCmdOutput := "USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nroot     21605  0.0  0.3   9504  3368 ?        S    16:32   0:00 bash -c cat | sh\nroot     21607  0.0  0.0   2608   596 ?        S    16:32   0:00  \\_ sh\n"
+	want := []mikrus.ProcessInfo{
+		{
+			User:              "root",
+			PID:               21605,
+			CPUPercent:        0.0,
+			MemoryPercent:     0.3,
+			VirtualMemorySize: 9504,
+			ResidentSetSize:   3368,
+			TTY:               "?",
+			State:             "S",
+			Start:             "16:32",
+			CPUTime:           "0:00",
+			Command:           "bash -c cat | sh",
+		},
+		{
+			User:              "root",
+			PID:               21607,
+			CPUPercent:        0.0,
+			MemoryPercent:     0.0,
+			VirtualMemorySize: 2608,
+			ResidentSetSize:   596,
+			TTY:               "?",
+			State:             "S",
+			Start:             "16:32",
+			CPUTime:           "0:00",
+			Command:           "\\_ sh",
+		},
+	}
+	got, err := mikrus.ParsePS(psCmdOutput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
 	}
 }

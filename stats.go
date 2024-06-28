@@ -3,7 +3,10 @@ package mikrus
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Stats struct {
@@ -68,10 +71,85 @@ type DiskSpace struct {
 	MountedOn  string `json:"mounted_on"`
 }
 
-func ParseDiskSpace(s string) (DiskSpace, error) {
-	var (
-		fileSystem, size, used, avail, usage, mountedOn string
+type ProcessInfo struct {
+	User              string
+	PID               uint64
+	CPUPercent        float64
+	MemoryPercent     float64
+	VirtualMemorySize uint64
+	ResidentSetSize   uint64
+	TTY               string
+	State             string
+	Start             string
+	CPUTime           string
+	Command           string
+}
+
+// Format: USER  PID     %CPU       %MEM         VSZ    RSS    TTY  STAT   START   TIME      COMMAND
+var psRE = regexp.MustCompile(`^(\w+) +(\d+) +(\d+\.\d+) +(\d+\.\d+) +(\d+) +(\d+) +(.) +(\w+) +([\d:]+) +([\d:]+) +(.+)$`)
+
+func ParsePS(s string) ([]ProcessInfo, error) {
+	lines := strings.Split(s, "\n")
+	list := make([]ProcessInfo, 0, len(lines)-1)
+	const (
+		USER = iota + 1
+		PID
+		CPUPERCENT
+		MEMPERCENT
+		VSZ
+		RSS
+		TTY
+		STAT
+		START
+		TIME
+		COMMAND
 	)
+	for _, line := range lines[1 : len(lines)-1] {
+		matches := psRE.FindStringSubmatch(line)
+		// if len(matches) != 12 {
+		// 	fmt.Printf("%#v)\n", matches)
+		// 	return nil, fmt.Errorf("parsing %q", line)
+		// }
+		pid, err := strconv.ParseUint(matches[PID], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		cpuPercent, err := strconv.ParseFloat(matches[CPUPERCENT], 64)
+		if err != nil {
+			return nil, err
+		}
+		memPercent, err := strconv.ParseFloat(matches[MEMPERCENT], 64)
+		if err != nil {
+			return nil, err
+		}
+		vsz, err := strconv.ParseUint(matches[VSZ], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		rss, err := strconv.ParseUint(matches[RSS], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, ProcessInfo{
+			User:              matches[USER],
+			PID:               pid,
+			CPUPercent:        cpuPercent,
+			MemoryPercent:     memPercent,
+			VirtualMemorySize: vsz,
+			ResidentSetSize:   rss,
+			TTY:               matches[TTY],
+			State:             matches[STAT],
+			Start:             matches[START],
+			CPUTime:           matches[TIME],
+			Command:           matches[COMMAND],
+		})
+	}
+	return list, nil
+}
+
+func ParseDiskSpace(s string) (DiskSpace, error) {
+	var fileSystem, size, used, avail, usage, mountedOn string
 
 	table := strings.Split(s, "\n")
 	if len(table) < 2 {
@@ -95,65 +173,67 @@ func ParseDiskSpace(s string) (DiskSpace, error) {
 }
 
 type Uptime struct {
-	Time          string `json:"time"`
-	DaysUp        int    `json:"days_up"`
-	UsersLoggedIn int    `json:"users_logged_in"`
-	CPUload1min   string `json:"load_average_1_min"`
-	CPUload5min   string `json:"load_average_5_min"`
-	CPUload15min  string `json:"load_average_15_min"`
+	Time         string        `json:"time"`
+	Uptime       time.Duration `json:"days_up"`
+	Users        int           `json:"users_logged_in"`
+	CPUload1min  float64       `json:"load_average_1_min"`
+	CPUload5min  float64       `json:"load_average_5_min"`
+	CPUload15min float64       `json:"load_average_15_min"`
 }
 
-func ParseUptime(s string) (_ Uptime, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("parsing `uptime` command output: %w", err)
-		}
-	}()
+var uptimeRE = regexp.MustCompile(`up (\d+) days, +(\d+):(\d\d), +(\d+) users, +load average: (\d+\.\d\d), (\d+\.\d\d), (\d+\.\d\d)`)
 
-	var (
-		daysUp, users           int
-		time, cpu1, cpu5, cpu15 string
+func ParseUptime(s string) (Uptime, error) {
+	matches := uptimeRE.FindStringSubmatch(s)
+	if len(matches) != 8 {
+		return Uptime{}, fmt.Errorf("parsing input %q", s)
+	}
+	const (
+		UPDAYS = iota + 1
+		UPHOURS
+		UPMINUTES
+		USERS
+		LOAD1MIN
+		LOAD5MIN
+		LOAD15MIN
 	)
-
-	table := strings.Split(s, "\n")
-	if len(table) < 1 {
-		return Uptime{}, err
-	}
-
-	line := strings.TrimSpace(table[0])
-	chunks := strings.Split(line, ",")
-	if len(chunks) != 6 {
-		return Uptime{}, err
-	}
-
-	_, err = fmt.Sscanf(strings.TrimSpace(chunks[0]), "%s up %d days", &time, &daysUp)
+	upDays, err := strconv.Atoi(matches[UPDAYS])
 	if err != nil {
 		return Uptime{}, err
 	}
-	_, err = fmt.Sscanf(strings.TrimSpace(chunks[2]), "%d users", &users)
+	upHours, err := strconv.Atoi(matches[UPHOURS])
 	if err != nil {
 		return Uptime{}, err
 	}
-	_, err = fmt.Sscanf(strings.TrimSpace(chunks[3]), "load average: %s", &cpu1)
+	upMinutes, err := strconv.Atoi(matches[UPMINUTES])
 	if err != nil {
 		return Uptime{}, err
 	}
-	_, err = fmt.Sscanf(strings.TrimSpace(chunks[4]), "%s", &cpu5)
+	up := 24 * time.Hour * time.Duration(upDays)
+	up += time.Duration(upHours) * time.Hour
+	up += time.Duration(upMinutes) * time.Minute
+	users, err := strconv.Atoi(matches[USERS])
 	if err != nil {
 		return Uptime{}, err
 	}
-	_, err = fmt.Sscanf(strings.TrimSpace(chunks[5]), "%s", &cpu15)
+	load1min, err := strconv.ParseFloat(matches[LOAD1MIN], 64)
 	if err != nil {
 		return Uptime{}, err
 	}
-
+	load5min, err := strconv.ParseFloat(matches[LOAD5MIN], 64)
+	if err != nil {
+		return Uptime{}, err
+	}
+	load15min, err := strconv.ParseFloat(matches[LOAD15MIN], 64)
+	if err != nil {
+		return Uptime{}, err
+	}
 	return Uptime{
-		Time:          time,
-		DaysUp:        daysUp,
-		UsersLoggedIn: users,
-		CPUload1min:   cpu1,
-		CPUload5min:   cpu5,
-		CPUload15min:  cpu15,
+		Uptime:       up,
+		Users:        users,
+		CPUload1min:  load1min,
+		CPUload5min:  load5min,
+		CPUload15min: load15min,
 	}, nil
 }
 
@@ -171,23 +251,23 @@ type Process struct {
 	Command string `json:"command"`
 }
 
-func ParseProcess(s string) (_ Process, err error) {
-	defer func() {
-		if err != nil {
-			err = fmt.Errorf("parsing `ps -u` command output: %w", err)
-		}
-	}()
+// func ParseProcess(s string) (_ Process, err error) {
+// 	defer func() {
+// 		if err != nil {
+// 			err = fmt.Errorf("parsing `ps -u` command output: %w", err)
+// 		}
+// 	}()
 
-	var (
-		user, pid, cpu, mem string
-	)
+// 	var (
+// 		user, pid, cpu, mem string
+// 	)
 
-	line := strings.TrimSpace(s)
-	chunks := strings.Split(line, "")
-	if len(chunks) != 11 {
-		return Process{}, err
-	}
+// 	line := strings.TrimSpace(s)
+// 	chunks := strings.Split(line, "")
+// 	if len(chunks) != 11 {
+// 		return Process{}, err
+// 	}
 
-	return Process{}, nil
+// 	return Process{}, nil
 
-}
+// }
