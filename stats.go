@@ -10,10 +10,10 @@ import (
 )
 
 type Stats struct {
-	Memory    Memory    `json:"memory"`
-	DiskSpace string    `json:"disk_space"`
-	Uptime    string    `json:"uptime"`
-	Processes []Process `json:"processes"`
+	Memory    Memory        `json:"memory"`
+	DiskSpace DiskSpace     `json:"disk_space"`
+	Uptime    Uptime        `json:"uptime"`
+	Processes []ProcessInfo `json:"processes"`
 }
 
 type Memory struct {
@@ -85,11 +85,14 @@ type ProcessInfo struct {
 	Command           string
 }
 
-// Format: USER  PID     %CPU       %MEM         VSZ    RSS    TTY  STAT   START   TIME      COMMAND
+// Format:                      USER    PID     %CPU       %MEM        VSZ    RSS   TTY   STAT   START     TIME     COMMAND
 var psRE = regexp.MustCompile(`^(\w+) +(\d+) +(\d+\.\d+) +(\d+\.\d+) +(\d+) +(\d+) +(.) +(\w+) +([\d:]+) +([\d:]+) +(.+)$`)
 
 func ParsePS(s string) ([]ProcessInfo, error) {
 	lines := strings.Split(s, "\n")
+	if len(lines) < 2 {
+		return nil, fmt.Errorf("invalid input line: %s", s)
+	}
 	list := make([]ProcessInfo, 0, len(lines)-1)
 	const (
 		USER = iota + 1
@@ -106,10 +109,9 @@ func ParsePS(s string) ([]ProcessInfo, error) {
 	)
 	for _, line := range lines[1 : len(lines)-1] {
 		matches := psRE.FindStringSubmatch(line)
-		// if len(matches) != 12 {
-		// 	fmt.Printf("%#v)\n", matches)
-		// 	return nil, fmt.Errorf("parsing %q", line)
-		// }
+		if len(matches) != 12 {
+			return nil, fmt.Errorf("parsing %q", line)
+		}
 		pid, err := strconv.ParseUint(matches[PID], 10, 64)
 		if err != nil {
 			return nil, err
@@ -236,38 +238,3 @@ func ParseUptime(s string) (Uptime, error) {
 		CPUload15min: load15min,
 	}, nil
 }
-
-type Process struct {
-	User    string `json:"user"`
-	PID     string `json:"pid"`
-	CPU     string `json:"cpu"`
-	Memory  string `json:"memory"`
-	VSZ     string `json:"vsz"`
-	RSS     string `json:"rss"`
-	TTY     string `json:"tty"`
-	Stat    string `json:"stat"`
-	Start   string `json:"start"`
-	Time    string `json:"time"`
-	Command string `json:"command"`
-}
-
-// func ParseProcess(s string) (_ Process, err error) {
-// 	defer func() {
-// 		if err != nil {
-// 			err = fmt.Errorf("parsing `ps -u` command output: %w", err)
-// 		}
-// 	}()
-
-// 	var (
-// 		user, pid, cpu, mem string
-// 	)
-
-// 	line := strings.TrimSpace(s)
-// 	chunks := strings.Split(line, "")
-// 	if len(chunks) != 11 {
-// 		return Process{}, err
-// 	}
-
-// 	return Process{}, nil
-
-// }
