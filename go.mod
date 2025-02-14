@@ -2,6 +2,8 @@ module github.com/qba73/mikrus
 
 go 1.24
 
+toolchain go1.24.0
+
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/spf13/cobra v1.8.0
