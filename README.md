@@ -6,7 +6,7 @@
 
 # mikrus
 
-`mikrus` is a Go library and command-line client for [MIKRUS VPS](https://mikr.us) provider. It allows you to interact with provisioned servers and perform various tasks, for example:
+`mikrus` is a CLI app for [MIKRUS VPS](https://mikr.us). It allows you to:
 
 - show information about your server
 - list provisioned servers
@@ -22,7 +22,7 @@
 
 ## Installing the command-line client
 
-To install the client binary, run:
+Install the client binary
 
 ```shell
 go install github.com/qba73/mikrus/cmd/mikctl@latest
@@ -160,8 +160,9 @@ Output: === Aktualne parametry: 768 RAM / 10 DYSK 2 / 20 Dodaje: 256MB RAM oraz 
 
 ## Bugs and feature requests
 
-If you find a bug in the `mikrus` client or library, please [open an issue](https://github.com/qba73/mikrus/issues). Similarly, if you'd like a feature added or improved, let me know via an issue.
+If you find a bug in the `mikrus` client, please [open an issue](https://github.com/qba73/mikrus/issues). Similarly, if you'd like a feature added or improved, let me know via an issue.
 
 Not all the functionality of the [Mikrus API](https://api.mikr.us) is implemented yet.
 
 Pull requests welcome!
+
