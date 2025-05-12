@@ -5,6 +5,7 @@
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/qba73/mikrus)
 ![GitHub](https://img.shields.io/github/license/qba73/mikrus)
 [![CodeQL](https://github.com/qba73/mikrus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/qba73/mikrus/actions/workflows/github-code-scanning/codeql)
+[![Scorecard](https://github.com/qba73/mikrus/actions/workflows/scorecard.yml/badge.svg)](https://github.com/qba73/mikrus/actions/workflows/scorecard.yml)
 
 # mikrus
 
