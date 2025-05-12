@@ -1,0 +1,17 @@
+name: "Staticcheck"
+
+on: ["push", "pull_request"]
+
+permissions: read-all
+
+jobs:
+  staticcheck:
+    name: Run Staticcheck Analyzer
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    - uses: dominikh/staticcheck-action@v1
+      with:
+        version: "latest"
