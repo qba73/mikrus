@@ -3,6 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 name: Tests
 jobs:
   test:
+    name: Run Tests
     strategy:
       matrix:
         go-version: ['stable']
@@ -14,7 +15,18 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - uses: actions/checkout@v3
       - run: go test ./...
+  lint:
+    name: Run Staticcheck Analysis
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - uses: dominikh/staticcheck-action@v1
+      with:
+        version: "latest"
   gocritic:
+    name: Run Gocritic Analysis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v4
