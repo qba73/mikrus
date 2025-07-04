@@ -6,6 +6,8 @@
 ![GitHub](https://img.shields.io/github/license/qba73/mikrus)
 [![CodeQL](https://github.com/qba73/mikrus/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/qba73/mikrus/actions/workflows/github-code-scanning/codeql)
 [![Scorecard](https://github.com/qba73/mikrus/actions/workflows/scorecard.yml/badge.svg)](https://github.com/qba73/mikrus/actions/workflows/scorecard.yml)
+![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
+
 
 # mikrus
 
